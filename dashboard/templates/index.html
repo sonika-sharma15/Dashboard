@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Admin Dashboard</title>
+
+    <!-- Bootstrap CSS for quick layout -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Q1UkdCo6KSQqG5cHhnFLdNSkkvDxEm/yHw5epemNE1udKY6Gr43gfTMKT4vH/I60" crossorigin="anonymous"></script>
+   
+
+    <style>
+        body {
+            background-color: rgb(3, 90, 61);
+        }
+        .card {
+            margin: 10px;
+        }
+        .card h5 {
+            font-size: 1.25rem;
+        }
+        .visualization {
+            height: 300px;
+        }
+        .sidebar {
+            background-color: #0eb227;
+            min-height: 50vh;
+            color: white;
+        }
+        /* .sidebar a { */
+            /* color: rgba(74, 44, 130, 0.064); */
+        /* } */
+        .blinking-title {
+            font-size: 24px;
+            font-style: italic;
+            font-weight: bolder;
+            margin: 10px;
+            display: inline-block;
+            animation: blink 1s step-start infinite;
+        }
+        @keyframes moveText {
+            0% {
+                transform: translateX(-10%);
+                color: orange;
+            }
+            50% {
+                transform: translateX(15%);
+                color: rgb(236, 34, 34);
+            }
+            100% {
+                transform: translateX(-10%);
+                color: magenta;
+            }
+        }
+        .display-5 {
+            animation: moveText 5s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row bg-dark text-white p-3">
+            <div class="col-md-12 text-center">
+                <div class="display-5 moving-title" id="blinkingTitle">Analytic Dashboard</div>
+            </div>
+        </div>
+        <div class="d-flex">
+            <div class="sidebar p-3">
+                <h4>Dashboard </h4>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <button class="btn btn-primary" id="loadOverviewBtn">Overview</button>
+                        <li class="nav-item">
+                            <a class="btn btn-primary" href="/dashboard/table/">Reports</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary" href="#">Settings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary" href="#">Help</a>
+                        </li>
+                    </ul>
+            </div>
+
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-6 col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Intensity, Likelihood, and Relevance</h5>
+                                <canvas id="combinedChart" class="visualization bg-light"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                
+               <div class="col-lg-6 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Comparison by Country and Region</h5>
+                            <canvas id="locationChart" class="visualization bg-light"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            </div>
+        </div>
+            
+        <div class="row">
+            <div class="col-lg-6 col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">PEST Analysis</h5>
+                        <canvas id="pestChart" class="visualization bg-light" style="display: none;" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="col-lg-6 col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">SWOT Analysis</h5>
+                        <canvas id="swotChart" class="visualization bg-light" style="display: none;" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div> <!-- End of the container-fluid -->
+    <div class="container mt-4">
+            <h1 style="color: rgb(77, 255, 0);">Search Filters</h1>
+            <form id="searchForm" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" id="endYear" class="form-control" placeholder="End Year">
+                </div>
+                <div class="col-md-4">
+                    <input type="text" id="topic" class="form-control" placeholder="Topic">
+                </div>
+                <div class="col-md-4">
+                    <input type="text" id="sector" class="form-control" placeholder="Sector">
+                </div>
+                <div class="col-md-4">
+                    <input type="text" id="region" class="form-control" placeholder="Region">
+                </div>
+                <div class="col-md-4">
+                    <input type="text" id="source" class="form-control" placeholder="Source">
+                </div>
+                <div class="col-md-4">
+                    <input type="text" id="country" class="form-control" placeholder="Country">
+                </div>
+                
+                <!-- Existing filters -->
+                <div class="col-md-4">
+                    <select id="pest" name="pest" class="form-control">
+                            <option value="">Select PEST</option>
+                            <option value="Political">Political</option>
+                            <option value="Economic">Economic</option>
+                            <option value="Social">Social</option>
+                            <option value="Technological">Technological</option>
+                            <option value="Industries">Industries</option>
+                        </select>
+                    </div>
+                
+                    <div class="col-md-4">
+                        <select id="swot" name="swot" class="form-control">
+                            <option value="">Select SWOT</option>
+                            <option value="Strength">Strength</option>
+                            <option value="Weakness">Weakness</option>
+                            <option value="Opportunities">Opportunities</option>
+                            <option value="Threat">Threat</option>
+                        </select>
+                    </div>
+
+                <div class="col-md-4">
+                    <button type="button" id="searchButton" class="btn btn-primary">Search</button>
+                </div>
+            </form>
+        </div>
+
+        <script>
+            document.getElementById('searchForm').onsubmit = function(event) {
+                event.preventDefault();  // Prevent form submission
+                const formData = new FormData(this);
+                const params = new URLSearchParams(formData).toString();
+                
+                fetch(`/dashboard/table_filter/?${params}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);  // Handle the data returned from the server
+                    });
+            };
+        </script>
+        
+       
+        </div>
+        <div class="container">
+            <h1 style="color: rgb(21, 255, 0);">Data Table</h1>
+            <table class="table table-bordered table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>End Year</th>
+                        <th>Topic</th>
+                        <th>Sector</th>
+                        <th>Region</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody">
+                    <!-- Data will be populated here dynamically -->
+                </tbody>
+            </table>
+
+    
+            <div id="pagination">
+                <button id="prev-btn" onclick="changePage(-1)">Previous</button>
+                <span id="page-info"></span>
+                <button id="next-btn" onclick="changePage(1)">Next</button>
+            </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="/static/js/pestswot.js"></script>
+        <script src="/static/js/charts.js"></script>
+        <script src="/static/js/location_chart.js"></script>
+        <script src="/static/js/year_topic.js"></script>
+
+        
+        <script>
+        
+            // Event listener for the Overview button
+        //document.getElementById('loadOverviewBtn').addEventListener('click', function() {
+            document.addEventListener('DOMContentLoaded', function() {
+            // Fetch data from the Django API endpoint
+            fetch('/dashboard/get_data/')  // Ensure this matches your URL pattern
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const intensityData = data.map(d => d.intensity);
+                    const likelihoodData = data.map(d => d.likelihood);
+                    const relevanceData = data.map(d => d.relevance);
+                    const countryData = data.map(d => d.country);
+                    const cityData = data.map(d => d.city);
+                    const regionData = data.map(d => d.region);
+                    const yearData = data.map(d => d.start_year);
+                    const topicsData = data.map(d => d.topic);
+
+                    // // Function to create charts
+                    // function createChart(elementId, chartType, label, data, backgroundColor) {
+                    //     const ctx = document.getElementById(elementId).getContext('2d');
+                    //     new Chart(ctx, {
+                    //         type: chartType,
+                    //         data: {
+                    //             labels: Array.from(new Set(data)), // Unique values for labels
+                    //             datasets: [{
+                    //                 label: label,
+                    //                 data: data,
+                    //                 backgroundColor: backgroundColor,
+                    //                 borderColor: backgroundColor,
+                    //                 borderWidth: 1
+                    //             }]
+                    //         },
+                    //         options: {
+                    //             responsive: true,
+                    //             scales: {
+                    //                 y: {
+                    //                     beginAtZero: true
+                    //                 }
+                    //             }
+                    //         }
+                    //     });
+                    // }
+
+                    //createChart("yearChart", "bar", "Year", yearData, 'rgba(255, 20, 145, 0.5)'); 
+                    //createChart("topicsChart", "line", "Topics", topicsData, 'rgba(0, 0, 255, 0.5)');
+                })
+                .catch(error => console.error('There was a problem with the fetch operation:', error));
+            });
+        </script>
+        
+        <!-- Include external JavaScript file before closing the body tag -->
+    <script src="/static/js/script.js"></script>
+    <script src="/static/js/pestswot.js"></script>
+    <script src="/static/js/charts.js"></script>
+    <script src="/static/js/year_topic.js"></script>
+    <script src="/static/js/location_chart.js"></script>
+        
+    <script>
+        document.getElementById('searchButton').addEventListener('click', function() {
+        const endYear = document.getElementById('endYear').value;
+        const topic = document.getElementById('topic').value;
+        const sector = document.getElementById('sector').value;
+        const region = document.getElementById('region').value;
+        const source = document.getElementById('source').value;
+        const country = document.getElementById('country').value;
+        const pest = document.getElementById('pest').value; // Get PEST value
+        const swot = document.getElementById('swot').value; // Get SWOT value
+
+    // Build the query string dynamically based on the provided values
+    const params = new URLSearchParams();
+    
+    if (endYear) params.append('end_year', endYear);
+    if (topic) params.append('topic', topic);
+    if (sector) params.append('sector', sector);
+    if (region) params.append('region', region);
+    if (source) params.append('source', source);
+    if (country) params.append('country', country);
+    if (pest) params.append('pest', pest);
+    if (swot) params.append('swot', swot);
+
+    // Fetch data from the server with the selected filters
+    fetch(`/dashboard/table_filter/?${params.toString()}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+    if (Array.isArray(data.results) && data.results.length > 0) {
+        renderTable(data.results); // Render table with filtered data
+       // Check if PEST or SWOT is selected and display the corresponding chart
+       // Prepare data for PEST chart
+       if (pest) {
+                const pestData = data.results.map(d => d.pestle); // Extract the relevant data for PEST
+                const pestCounts = {}; // Object to count occurrences
+                pestData.forEach(p => {
+                    pestCounts[p] = (pestCounts[p] || 0) + 1; // Count occurrences of each pestle value
+                });
+
+                const pestLabels = Object.keys(pestCounts); // Get unique labels
+                const pestCountsValues = Object.values(pestCounts); // Get counts for each label
+
+                document.getElementById('pestChart').style.display = 'block';
+                createChart("pestChart", "bar", "PEST Analysis", pestLabels, pestCountsValues, 'rgba(75, 192, 192, 0.5)');
+            } else {
+                document.getElementById('pestChart').style.display = 'none';
+            }
+
+            // Prepare data for SWOT chart
+        if (swot) {
+                const swotData = data.results.map(d => d.swot); // Extract the relevant data for SWOT
+                const swotCounts = {}; // Object to count occurrences
+                swotData.forEach(s => {
+                    swotCounts[s] = (swotCounts[s] || 0) + 1; // Count occurrences of each swot value
+                });
+
+                const swotLabels = Object.keys(swotCounts); // Get unique labels
+                const swotCountsValues = Object.values(swotCounts); // Get counts for each label
+
+                document.getElementById('swotChart').style.display = 'block';
+                createChart("swotChart", "bar", "SWOT Analysis", swotLabels, swotCountsValues, 'rgba(153, 102, 255, 0.5)');
+            } else {
+                document.getElementById('swotChart').style.display = 'none';
+            }
+
+        } else {
+            document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="5">No data found</td></tr>';
+            // Hide charts if no data
+            document.getElementById('pestChart').style.display = 'none';
+            document.getElementById('swotChart').style.display = 'none';
+        }
+    })
+        .catch(error => console.error('Error fetching filtered data:', error));
+});
+    
+    function renderTable(data) {
+    const tableBody = document.getElementById('dataTableBody');
+    tableBody.innerHTML = ''; // Clear existing rows
+
+    data.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.id}</td>
+            <td>${item.end_year}</td>
+            <td>${item.topic}</td>
+            <td>${item.sector}</td>
+            <td>${item.region}</td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+   
+
+const params = new URLSearchParams({
+    pestle: selectedPestle, // Ensure this variable has the correct value
+    swot: selectedSwot      // Ensure this variable has the correct value
+});
+
+fetch(`/dashboard/run-query/?${params.toString()}`)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data); // Log the entire data object to check the structure
+        if (Array.isArray(data.results) && data.results.length > 0) {
+            renderTable(data.results); // Render table with filtered data
+            
+            // Prepare data for PEST chart
+            if (pest) {
+                const pestData = data.results.map(d => d.pestle); // Extract the relevant data for PEST
+                const pestCounts = {};
+                pestData.forEach(p => {
+                    pestCounts[p] = (pestCounts[p] || 0) + 1; // Count occurrences
+                });
+                const pestLabels = Object.keys(pestCounts);
+                const pestCountsValues = Object.values(pestCounts);
+                document.getElementById('pestChart').style.display = 'block';
+                createChart("pestChart", "bar", "PEST Analysis", pestLabels, pestCountsValues, 'rgba(75, 192, 192, 0.5)');
+            } else {
+                document.getElementById('pestChart').style.display = 'none';
+            }
+
+            // Prepare data for SWOT chart
+            if (swot) {
+                const swotData = data.results.map(d => d.swot); // Extract the relevant data for SWOT
+                const swotCounts = {};
+                swotData.forEach(s => {
+                    swotCounts[s] = (swotCounts[s] || 0) + 1; // Count occurrences
+                });
+                const swotLabels = Object.keys(swotCounts);
+                const swotCountsValues = Object.values(swotCounts);
+                document.getElementById('swotChart').style.display = 'block';
+                createChart("swotChart", "bar", "SWOT Analysis", swotLabels, swotCountsValues, 'rgba(153, 102, 255, 0.5)');
+            } else {
+                document.getElementById('swotChart').style.display = 'none';
+            }
+        } else {
+            document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="5">No data found</td></tr>';
+            document.getElementById('pestChart').style.display = 'none';
+            document.getElementById('swotChart').style.display = 'none';
+        }
+    })
+    .catch(error => console.error('Error fetching filtered data:', error));
+    
+    
+function createChart(chartId, type, label, labels, data, backgroundColor) {
+    const ctx = document.getElementById(chartId).getContext('2d');
+    new Chart(ctx, {
+        type: type,
+        data: {
+            labels: labels,  // These will be PEST or SWOT labels
+            datasets: [{
+                label: label,
+                data: data,  // Data array for the chart
+                backgroundColor: backgroundColor,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+    
+    </script>
+</body>
+</html>
